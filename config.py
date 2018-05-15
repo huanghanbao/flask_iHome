@@ -1,5 +1,7 @@
 # coding=utf-8
 import redis
+import pymysql
+pymysql.install_as_MySQLdb()
 
 
 class Config(object):
@@ -8,7 +10,7 @@ class Config(object):
     SECRET_KEY = 'z5nBmcVOUsZxwK6SKhx4aiLidU52GecMdO43LubPjZKhavBa+vMKrZqR3Ai+6R+2'
 
     # mysql数据库相关配置
-    SQLALCHEMY_DATABASE_URI = "mysql：//root：mysql@192.168.105.137:3306/ihome_sz"
+    SQLALCHEMY_DATABASE_URI = "mysql://root:mysql@192.168.105.137:3306/ihome_sz"
     # 关闭追踪数据库的修改
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # redis数据库配置
@@ -34,13 +36,13 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """生产环境中的配置类"""
     # mysql数据库相关配置
-    SQLALCHEMY_DATABASE_URI = "mysql：//root：mysql@192.168.105.137:3306/ihome"
+    SQLALCHEMY_DATABASE_URI = "mysql://root:mysql@192.168.105.137:3306/ihome"
 
 
 class TestingConfig(Config):
     """测试环境中的配置类"""
     # mysql数据库相关配置
-    SQLALCHEMY_DATABASE_URI = "mysql：//root：mysql@192.168.105.137:3306/ihome_testcase"
+    SQLALCHEMY_DATABASE_URI = "mysql://root:mysql@192.168.105.137:3306/ihome_testcase"
     # 开启测试标志
     TESTING = True
 
