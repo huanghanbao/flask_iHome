@@ -15,7 +15,7 @@ function generateUUID() {
     });
     return uuid;
 }
-var imageCodeId = ""
+var imageCodeId = "";
 // 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
 function generateImageCode() {
     // 生成uuid（图片验证码编号）
@@ -24,7 +24,7 @@ function generateImageCode() {
     // 设置验证码图片img标签的src地址
     var req_url = "/api/v1.0/image_code?cur_id=" + imageCodeId;
     // $('.image-code').children('img').attr('src', req_url);
-    $('.image-code>img').attr('src',req_url)
+    $('.image-code>img').attr('src', req_url)
 }
 
 function sendSMSCode() {
@@ -46,6 +46,54 @@ function sendSMSCode() {
     }
 
     // TODO: 通过ajax方式向后端接口发送请求，让后端发送短信验证码
+    var params = {
+        "mobile": mobile,
+        "image_code": imageCode,
+        "image_code_id": imageCodeId
+    };
+
+    $.ajax({
+        "url": "/api/v1.0/sms_code",  // 请求url地址
+        "type": "post", // 请求方式，默认是get
+        "contentType": "application/json", // 请求数据的格式
+        "data": JSON.stringify(params), // 请求时传递数据
+        "dataType": "json", // 期望服务器返回数据类型
+        "headers": {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
+        "success": function (resp) {
+            // 回调函数
+            if (resp.errno == "0") {
+                // 发送成功
+                // 进行倒计时60s
+                var num = 60;
+                var tid = setInterval(function () {
+                    if (num <= 0) {
+                        // 倒计时结束
+                        // 清除定时器
+                        clearInterval(tid);
+                        // 重置获取验证码的内容
+                        $(".phonecode-a").html("获取验证码");
+                        // 添加发送短信点击事件
+                        $(".phonecode-a").attr("onclick", "sendSMSCode();");
+                    }
+                    else {
+                        // 倒计时剩余秒数-1
+                        num -= 1;
+                        // 设置倒计时剩余秒数
+                        $(".phonecode-a").html(num + "秒数")
+                    }
+                }, 1000)
+            }
+            else {
+                // 发送失败
+                $("#phone-code-err span").html(resp.errmsg);
+                $("#phone-code-err").show();
+                // 添加发送短信点击事件
+                $(".phonecode-a").attr("onclick", "sendSMSCode();");
+            }
+        }
+    })
 }
 
 $(document).ready(function () {
@@ -68,4 +116,63 @@ $(document).ready(function () {
     });
 
     // TODO: 注册的提交(判断参数是否为空)
-})
+    $(".form-register").submit(function (e) {
+        // 阻止表单默认提交行为
+        e.preventDefault();
+
+        // 自己写代码进行提交
+        var mobile = $("#mobile").val();
+        var phoneCode = $("#phonecode").val();
+        var password = $("#password").val();
+        var password2 = $("#password2").val();
+        if (!mobile) {
+            $("#mobile-err span").html("请填写正确的手机号！");
+            $("#mobile-err").show();
+            return;
+        }
+        if (!phoneCode) {
+            $("#phone-code-err span").html("请填写短信验证码！");
+            $("#phone-code-err").show();
+            return;
+        }
+        if (!password) {
+            $("#password-err span").html("请填写密码!");
+            $("#password-err").show();
+            return;
+        }
+        if (password != password2) {
+            $("#password2-err span").html("两次密码不一致!");
+            $("#password2-err").show();
+            return;
+        }
+
+        // 请求后端注册api，进行用户注册
+        var params = {
+            "mobile": mobile,
+            "sms_code": phoneCode,
+            "password": password
+        };
+
+        $.ajax({
+            "url": "/api/v1.0/users",
+            "type": "post",
+            "contentType": "application/json",
+            "data": JSON.stringify(params),
+            "dataType": "json",
+            "headers": {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
+            "success": function (resp) {
+                if (resp.errno == "0") {
+                    // 注册成功,跳转到首页
+                    location.href = "index.html";
+                }
+                else {
+                    // 注册失败
+                    $("#password2-err span").html(resp.errmsg);
+                    $("#password2-err").show();
+                }
+            }
+        })
+    })
+});

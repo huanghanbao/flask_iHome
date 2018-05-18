@@ -1,4 +1,5 @@
 # coding=utf-8
+import logging
 import redis
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -32,11 +33,17 @@ class DevelopmentConfig(Config):
     """开发环境中配置类"""
     DEBUG = True
 
+    # 开发阶段日志等级
+    LOG_LEVEL = logging.DEBUG
+
 
 class ProductionConfig(Config):
     """生产环境中的配置类"""
     # mysql数据库相关配置
     SQLALCHEMY_DATABASE_URI = "mysql://root:mysql@192.168.105.137:3306/ihome"
+
+    # 生产阶段日志等级
+    LOG_LEVEL = logging.WARN
 
 
 class TestingConfig(Config):
@@ -45,6 +52,7 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = "mysql://root:mysql@192.168.105.137:3306/ihome_testcase"
     # 开启测试标志
     TESTING = True
+
 
 config_dict = {
     "development": DevelopmentConfig,
