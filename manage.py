@@ -9,7 +9,6 @@ app = create_app("development")
 
 # 创建Manager管理对象
 manager = Manager(app)
-
 Migrate(app, db)
 
 # 添加迁移命令
