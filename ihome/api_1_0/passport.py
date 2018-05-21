@@ -1,7 +1,6 @@
 # coding=utf-8
 # 此文件中定义和用户登录，注册有关api
 import re
-import user
 
 from flask import current_app, session
 from flask import request, jsonify
@@ -9,6 +8,20 @@ from ihome import redis_store, db
 from ihome.models import User
 from ihome.utils.response_code import RET
 from . import api
+
+
+@api.route("/sessions")
+def check_user_login():
+    """
+    获取登录用户信息:
+    """
+    # 尝试从session获取user_id 和 username
+    # 如果获取不到，返回空字符串
+    user_id = session.get("user_id", '')
+    username = session.get("username", '')
+
+    # 返回数据
+    return jsonify(errno=RET.OK, errmsg="OK", data={"user_id": user_id, "username": username})
 
 
 @api.route("/session", methods=["DELETE"])
@@ -53,7 +66,7 @@ def login():
 
     # 3.校验登录密码是否正确
     if not user.check_user_password(password):
-        return jsonify(errno=RET.PWDERR, errmsg="用户名或密码不正确")
+        return jsonify(errno=RET.PWDERR, errmsg="用户密码不正确")
     print user.id
     # 4.记住用户的登录状态
     session["user_id"] = user.id
