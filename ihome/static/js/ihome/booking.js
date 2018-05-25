@@ -7,9 +7,9 @@ function getCookie(name) {
     return r ? r[1] : undefined;
 }
 
-function decodeQuery(){
+function decodeQuery() {
     var search = decodeURI(document.location.search);
-    return search.replace(/(^\?)/, '').split('&').reduce(function(result, item){
+    return search.replace(/(^\?)/, '').split('&').reduce(function (result, item) {
         values = item.split('=');
         result[values[0]] = values[1];
         return result;
@@ -17,15 +17,24 @@ function decodeQuery(){
 }
 
 function showErrorMsg() {
-    $('.popup_con').fadeIn('fast', function() {
-        setTimeout(function(){
-            $('.popup_con').fadeOut('fast',function(){}); 
-        },1000) 
+    $('.popup_con').fadeIn('fast', function () {
+        setTimeout(function () {
+            $('.popup_con').fadeOut('fast', function () {
+            });
+        }, 1000)
     });
 }
 
-$(document).ready(function(){
+$(document).ready(function () {
     // TODO: 判断用户是否登录
+    $.get("/api/v1.0/sessions", function (resp) {
+        if (resp.data.username && resp.data.user_id) {
+        }
+        else {
+            // 用户未登录，显示登录注册和登录按钮
+            location.href = "login.html";
+        }
+    });
 
     $(".input-daterange").datepicker({
         format: "yyyy-mm-dd",
@@ -33,7 +42,7 @@ $(document).ready(function(){
         language: "zh-CN",
         autoclose: true
     });
-    $(".input-daterange").on("changeDate", function(){
+    $(".input-daterange").on("changeDate", function () {
         var startDate = $("#start-date").val();
         var endDate = $("#end-date").val();
 
@@ -42,16 +51,74 @@ $(document).ready(function(){
         } else {
             var sd = new Date(startDate);
             var ed = new Date(endDate);
-            days = (ed - sd)/(1000*3600*24) + 1;
+            days = (ed - sd) / (1000 * 3600 * 24);
             var price = $(".house-text>p>span").html();
             var amount = days * parseFloat(price);
-            $(".order-amount>span").html(amount.toFixed(2) + "(共"+ days +"晚)");
+            $(".order-amount>span").html(amount.toFixed(2) + "(共" + days + "晚)");
         }
     });
+
     var queryData = decodeQuery();
     var houseId = queryData["hid"];
-
     // TODO: 获取房屋的基本信息
+    $.get("/api/v1.0/house/" + houseId, function (resp) {
+        if (resp.errno == "0") {
+            // 成功
+            // 设置房屋的图片
+            $(".house-info>img").attr("src", resp.data.house.img_urls[0]);
+            // 设置房屋的价格和标题
+            $(".house-text>h3").html(resp.data.house.title);
+            $(".house-text span").html(resp.data.house.price);
+        }
+        else {
+            // 失败
+            alert(resp.errmsg);
+        }
+
+    });
 
     // TODO: 订单提交
-})
+    $(".submit-btn").click(function () {
+        // 获取参数
+        var start_date = $("#start-date").val();
+        var end_date = $("#end-date").val();
+
+        if (!start_date || !end_date) {
+            alert("请选择预定时间！");
+            return;
+        }
+
+        // 组织参数
+        var params = {
+            "house_id": houseId,
+            "start_date": start_date,
+            "end_date": end_date
+        };
+
+        // 请求预定房屋
+        $.ajax({
+            "url": "/api/v1.0/orders",  // 请求url地址
+            "type": "post", // 请求方式，默认是get
+            "contentType": "application/json", // 请求数据的格式
+            "data": JSON.stringify(params), // 请求时传递数据
+            "headers": {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
+            "success": function (resp) {
+                // 回调函数
+                if (resp.errno == "0") {
+                    // 房屋预定成功
+                    location.href = "orders.html"
+                }
+                else if (resp.errno == "4101") {
+                    // 未登录
+                    location.href = "login.html"
+                }
+                else {
+                    // 出错
+                    alert(resp.errmsg);
+                }
+            }
+        })
+    })
+});

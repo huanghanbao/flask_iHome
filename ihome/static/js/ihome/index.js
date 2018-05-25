@@ -45,14 +45,18 @@ function setEndDate() {
 
 function goToSearchPage(th) {
     var url = "/search.html?";
+    // 获取选择的城区id
     url += ("aid=" + $(th).attr("area-id"));
     url += "&";
+    // 获取城区的名称
     var areaName = $(th).attr("area-name");
     if (undefined == areaName) areaName = "";
     url += ("aname=" + areaName);
     url += "&";
+    // 获取选择的搜索起始时间
     url += ("sd=" + $(th).attr("start-date"));
     url += "&";
+    // 获取选择的搜索结束时间
     url += ("ed=" + $(th).attr("end-date"));
     location.href = url;
 }
